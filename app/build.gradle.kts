@@ -44,7 +44,7 @@ android {
 dependencies {
 
     implementation(libs.firebase.analytics.ktx)
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom))
 
 
     implementation(libs.androidx.core.ktx)
