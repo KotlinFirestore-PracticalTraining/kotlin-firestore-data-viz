@@ -43,8 +43,8 @@ android {
 
 dependencies {
 
-    implementation("com.google.firebase:firebase-analytics-ktx")
-    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
+    implementation(libs.firebase.analytics.ktx)
+    implementation(libs.firebase.bom)
 
 
     implementation(libs.androidx.core.ktx)
