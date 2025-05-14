@@ -40,17 +40,25 @@ android {
         compose = true
     }
 }
-
 dependencies {
 
-    implementation(libs.firebase.analytics.ktx)
-    implementation(platform(libs.firebase.bom))
+    implementation("de.androidpit:color-thief:1.1.2")
+    implementation("androidx.palette:palette-ktx:1.0.0")
 
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics.ktx)
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.auth.ktx)
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.coil.compose)
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -62,4 +70,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
 }
