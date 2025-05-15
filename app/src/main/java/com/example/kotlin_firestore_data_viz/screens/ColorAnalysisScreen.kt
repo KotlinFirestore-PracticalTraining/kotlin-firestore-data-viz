@@ -58,7 +58,7 @@ private const val THRESHOLD_PERCENT = 1f
 // UI model
 private data class Swatch(val colorInt: Int, val percentTimes10: Int)
 
-// Firestore DTOs
+// DataClasses for saving/loading analyses in FIrestore:
 private data class Analysis(
     val imageUri: String = "",
     val timestamp: Long = 0L,
@@ -66,15 +66,20 @@ private data class Analysis(
 )
 private data class SwatchDTO(val colorHex: String = "", val percent: Float = 0f)
 
+
+// Main Composable screen
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColorAnalysisScreen() {
+    // Android / Compose contexts & helpers
     val context    = LocalContext.current
     val scope      = rememberCoroutineScope()
     val snackbar   = remember { SnackbarHostState() }
     val db         = remember { FirebaseFirestore.getInstance() }
     val scroll     = rememberScrollState()
 
+    // UI state variables
     var pickedUri   by remember { mutableStateOf<Uri?>(null) }
     var swatches    by remember { mutableStateOf<List<Swatch>>(emptyList()) }
     var isAnalyzing by remember { mutableStateOf(false) }
@@ -82,7 +87,7 @@ fun ColorAnalysisScreen() {
     var history     by remember { mutableStateOf<List<Analysis>>(emptyList()) }
     var detailRec   by remember { mutableStateOf<Analysis?>(null) }
 
-    // 1) image picker
+    // Launcher for the system image-picker
     val launcher = rememberLauncherForActivityResult(GetContent()) { uri ->
         uri?.let {
             pickedUri = it
@@ -131,12 +136,12 @@ fun ColorAnalysisScreen() {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 3A) detail view if selected
+            // detail view if selected
             detailRec?.let { rec ->
                 HistoryItemDetail(rec) { detailRec = null }
             }
 
-            // 3B) main UI
+            //  main UI
             AnimatedVisibility(
                 visible = detailRec == null,
                 enter   = fadeIn(tween(300)),
@@ -192,6 +197,8 @@ fun ColorAnalysisScreen() {
                             bmp?.let { bitmap ->
                                 val freq  = computeQuantizedHistogram(bitmap)
                                 val total = freq.values.sum().toFloat()
+
+                                // convert histogram into our Swatch list
                                 swatches = freq.entries.map { (k, v) ->
                                     val c    = dequantizeBucket(k)
                                     val pct10 = ((v * 1000f) / total).roundToInt()
@@ -204,6 +211,7 @@ fun ColorAnalysisScreen() {
 
                         Spacer(Modifier.height(24.dp))
 
+                        // Once analyzed, show results + “Save” button
                         if (!isAnalyzing && swatches.isNotEmpty()) {
                             Text("Dominant Colors", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             Spacer(Modifier.height(12.dp))
@@ -217,13 +225,13 @@ fun ColorAnalysisScreen() {
                                 onClick = {
                                     pickedUri?.toString()?.let { uriString ->
                                         scope.launch {
-                                            // 1) First check for an existing analysis with the same image URI
+                                            // First check for an existing analysis with the same image URI
                                             db.collection("analyses")
                                                 .whereEqualTo("imageUri", uriString)
                                                 .get()
                                                 .addOnSuccessListener { snap ->
                                                     if (snap.isEmpty) {
-                                                        // 2a) none found → save new
+                                                        //  none found → save new
                                                         val rec = Analysis(
                                                             imageUri = uriString,
                                                             timestamp = System.currentTimeMillis(),
@@ -241,7 +249,7 @@ fun ColorAnalysisScreen() {
                                                             }
 
                                                     } else {
-                                                        // 2b) duplicate found → warn user
+                                                        // duplicate found → warn user
                                                         scope.launch {
                                                             snackbar.showSnackbar("You’ve already saved this photo’s analysis.")
                                                         }
@@ -303,7 +311,7 @@ fun ColorAnalysisScreen() {
     }
 }
 
-// ——— Reusable bits ——————————————————————————————————
+//   Reusable small Composable for swatches, bars, history rows
 
 @Composable
 private fun ColorSwatchItem(swatch: Swatch) {
@@ -419,6 +427,7 @@ private fun HistoryItemDetail(analysis: Analysis, onClose: ()->Unit) {
     }
 }
 
+// Helper functions for pixel-level histogram & quantize
 private fun loadDownsampledBitmap(ctx: Context, uri: Uri): Bitmap? {
     val b = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     ctx.contentResolver.openInputStream(uri)?.use {
@@ -434,6 +443,7 @@ private fun loadDownsampledBitmap(ctx: Context, uri: Uri): Bitmap? {
         BitmapFactory.decodeStream(it, null, opts)
     }
 }
+// Builds a histogram of quantized color buckets
 
 private fun computeQuantizedHistogram(bitmap: Bitmap): Map<Int,Int> {
     val freq = mutableMapOf<Int,Int>()
@@ -449,6 +459,7 @@ private fun computeQuantizedHistogram(bitmap: Bitmap): Map<Int,Int> {
         }
     return freq
 }
+// Converts a bucket key back into a full 0xAARRGGBB color
 
 private fun dequantizeBucket(bucket: Int): Int {
     val mask = (1 shl BITS_PER_CHANNEL) - 1
