@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,7 +35,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -47,6 +47,8 @@ import kotlin.math.roundToInt
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.get
 
 // quantization settings
 private const val MAX_DIMENSION    = 300
@@ -281,7 +283,7 @@ fun ColorAnalysisScreen() {
                         Icon(Icons.Default.Close, contentDescription = null)
                     }
                 }
-                Divider()
+                HorizontalDivider()
                 if (history.isEmpty()) {
                     Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text("No saved analyses", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -362,7 +364,7 @@ private fun HistoryRow(analysis: Analysis, onClick: ()->Unit) {
                 analysis.swatches.take(6).forEach { sw ->
                     Box(
                         Modifier.size(24.dp).clip(CircleShape)
-                            .background(Color(android.graphics.Color.parseColor(sw.colorHex)))
+                            .background(Color(sw.colorHex.toColorInt()))
                     )
                 }
                 if (analysis.swatches.size>6) {
@@ -406,7 +408,7 @@ private fun HistoryItemDetail(analysis: Analysis, onClose: ()->Unit) {
         Text("Color Analysis", fontSize=18.sp, fontWeight=FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         val uiSw = analysis.swatches.map {
-            val cInt = android.graphics.Color.parseColor(it.colorHex)
+            val cInt = it.colorHex.toColorInt()
             Swatch(cInt, (it.percent*10).roundToInt())
         }
         LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -438,7 +440,7 @@ private fun computeQuantizedHistogram(bitmap: Bitmap): Map<Int,Int> {
     val shift = 8 - BITS_PER_CHANNEL
     for (y in 0 until bitmap.height)
         for (x in 0 until bitmap.width) {
-            val px = bitmap.getPixel(x,y) and 0x00FFFFFF
+            val px = bitmap[x, y] and 0x00FFFFFF
             val r = (px shr 16 and 0xFF) shr shift
             val g = (px shr 8  and 0xFF) shr shift
             val b = (px       and 0xFF) shr shift
