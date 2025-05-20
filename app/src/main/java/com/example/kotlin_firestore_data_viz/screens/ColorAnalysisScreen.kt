@@ -58,7 +58,7 @@ private const val THRESHOLD_PERCENT = 1f
 // UI model
 private data class Swatch(val colorInt: Int, val percentTimes10: Int)
 
-// DataClasses for saving/loading analyses in FIrestore:
+// DataClasses for saving/loading analyses in Firestore:
 private data class Analysis(
     val imageUri: String = "",
     val timestamp: Long = 0L,
