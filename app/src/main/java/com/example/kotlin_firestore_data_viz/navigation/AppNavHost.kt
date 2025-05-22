@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.PhotoFilter
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,17 +14,22 @@ import androidx.navigation.compose.*
 import com.example.kotlin_firestore_data_viz.screens.ColorAnalysisScreen
 import com.example.kotlin_firestore_data_viz.screens.DataVizScreen
 import com.example.kotlin_firestore_data_viz.screens.ImageTransformScreen
+import com.example.kotlin_firestore_data_viz.screens.ImageDetectorScreen
+
+
 
 sealed class Screen(val route: String, val icon: ImageVector, val title: String) {
     object DataViz        : Screen("data_viz",        Icons.Filled.BarChart,    "Charts" )
     object ColorAnalysis  : Screen("color_analysis",  Icons.Filled.ColorLens,   "Colors" )
     object ImageTransform : Screen("image_transform", Icons.Filled.PhotoFilter, "Transform")
+    object Detector       : Screen("image_detector",        Icons.Filled.Search, "Detector")
 }
 
 private val allScreens = listOf(
     Screen.DataViz,
     Screen.ColorAnalysis,
-    Screen.ImageTransform
+    Screen.ImageTransform,
+    Screen.Detector
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +71,9 @@ fun AppNavHost() {
             }
             composable(Screen.ImageTransform.route) {
                 ImageTransformScreen()
+            }
+            composable(Screen.Detector.route) {
+                ImageDetectorScreen()
             }
         }
     }
