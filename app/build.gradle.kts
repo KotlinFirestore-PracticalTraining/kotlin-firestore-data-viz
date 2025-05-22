@@ -44,6 +44,9 @@ dependencies {
 
     implementation("de.androidpit:color-thief:1.1.2")
     implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.mpandroidchart)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
