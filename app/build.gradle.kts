@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
     id("com.google.gms.google-services")
 }
 
@@ -40,10 +39,13 @@ android {
         compose = true
     }
 }
-dependencies {
 
+dependencies {
     implementation("de.androidpit:color-thief:1.1.2")
     implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.ui.text)
+    implementation(libs.mpandroidchart)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
@@ -64,6 +66,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.image.labeling.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -75,8 +78,6 @@ dependencies {
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
-    implementation (libs.image.labeling)
-    implementation (libs.object1.detection.v1702)
-
-
+    implementation(libs.image.labeling)
+    implementation (libs.image.labeling.v1709)
 }
