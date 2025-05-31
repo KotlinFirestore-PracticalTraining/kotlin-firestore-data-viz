@@ -15,7 +15,8 @@ fun applyImageFilters(
     hue: Float = 0f,
     saturation: Float = 1f,
     brightness: Float = 1f,
-    contrast: Float = 1f
+    contrast: Float = 1f,
+    grayscale: Boolean = false // Add the missing comma here
 ): Bitmap {
     val src = source.copy(Bitmap.Config.ARGB_8888, true)
     val bmp = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
@@ -31,7 +32,7 @@ fun applyImageFilters(
 
     // Saturation
     val saturationMatrix = ColorMatrix().apply {
-        setSaturation(saturation)
+        setSaturation(if (grayscale) 0f else saturation) // Set saturation to 0 if grayscale
     }
 
     // Brightness
@@ -44,7 +45,7 @@ fun applyImageFilters(
         )
     )
 
-    // ✅ Contrast
+    // Contrast
     val contrastScale = contrast
     val contrastTranslate = (-0.5f * contrastScale + 0.5f) * 255f
     val contrastMatrix = ColorMatrix(
@@ -66,7 +67,6 @@ fun applyImageFilters(
 
     return bmp
 }
-
 
 fun cropBitmap(source: Bitmap): Bitmap {
     val width = source.width
