@@ -22,8 +22,8 @@ import androidx.core.graphics.drawable.toBitmap
 import com.example.kotlin_firestore_data_viz.utils.cropBitmap
 import com.example.kotlin_firestore_data_viz.utils.resizeBitmap
 import com.example.kotlin_firestore_data_viz.controller.FilterControls
-
-
+import com.example.kotlin_firestore_data_viz.utils.rotateBitmap
+import com.example.kotlin_firestore_data_viz.utils.saveBitmapToGallery
 
 
 @Composable
@@ -76,6 +76,16 @@ fun ImageEditorScreen() {
                     editedBitmap = resizeBitmap(bmp, 300, 300)
                 }) {
                     Text("Resize")
+                }
+                Button(onClick = {
+                    editedBitmap = editedBitmap?.let { rotateBitmap(it, 90f) }
+                }) {
+                    Text("Rotate 90°")
+                }
+                Button(onClick = {
+                    editedBitmap?.let { saveBitmapToGallery(context, it) }
+                }) {
+                    Text("Save")
                 }
             }
 

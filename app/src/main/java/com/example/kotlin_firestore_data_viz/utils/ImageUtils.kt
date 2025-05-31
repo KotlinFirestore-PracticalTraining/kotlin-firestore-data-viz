@@ -1,10 +1,13 @@
 package com.example.kotlin_firestore_data_viz.utils
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.provider.MediaStore
+import android.widget.Toast
 
 
 fun applyImageFilters(
@@ -88,4 +91,34 @@ fun resizeBitmap(source: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
     }
     canvas.drawBitmap(source, scaleMatrix, null)
     return resizedBitmap
+}
+
+// Utility functions
+fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+    val matrix = android.graphics.Matrix().apply { postRotate(angle) }
+    return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+}
+
+fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
+    // Show a message before saving
+    Toast.makeText(context, "Saving image...", Toast.LENGTH_SHORT).show()
+
+    val filename = "IMG_${System.currentTimeMillis()}.png"
+    val contentValues = android.content.ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+        put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MyApp") // Save in Pictures/MyApp folder
+    }
+
+    val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+    uri?.let { outputUri ->
+        context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
+            if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
+                throw IllegalStateException("Failed to save bitmap")
+            }
+        }
+        // Show a success message after saving
+        Toast.makeText(context, "Image saved successfully!", Toast.LENGTH_SHORT).show()
+    } ?: throw IllegalStateException("Failed to create MediaStore entry")
 }
