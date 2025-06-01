@@ -16,7 +16,7 @@ fun applyImageFilters(
     saturation: Float = 1f,
     brightness: Float = 1f,
     contrast: Float = 1f,
-    grayscale: Boolean = false // Add the missing comma here
+    grayscale: Boolean = false
 ): Bitmap {
     val src = source.copy(Bitmap.Config.ARGB_8888, true)
     val bmp = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
@@ -81,7 +81,7 @@ fun cropBitmap(source: Bitmap): Bitmap {
     return Bitmap.createBitmap(source, startX, startY, newWidth, newHeight)
 }
 
-fun resizeBitmap(source: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
+/* fun resizeBitmap(source: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
     val resizedBitmap = Bitmap.createBitmap(newWidth, newHeight, source.config ?: Bitmap.Config.ARGB_8888)
     val canvas = Canvas(resizedBitmap)
     val scaleX = newWidth.toFloat() / source.width
@@ -91,7 +91,7 @@ fun resizeBitmap(source: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
     }
     canvas.drawBitmap(source, scaleMatrix, null)
     return resizedBitmap
-}
+}*/
 
 // Utility functions
 fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
@@ -121,4 +121,11 @@ fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
         // Show a success message after saving
         Toast.makeText(context, "Image saved successfully!", Toast.LENGTH_SHORT).show()
     } ?: throw IllegalStateException("Failed to create MediaStore entry")
+}
+
+fun resizeToPassportSize(source: Bitmap): Bitmap {
+    // Standard passport size: 600x600 pixels
+    val passportWidth = 600
+    val passportHeight = 600
+    return Bitmap.createScaledBitmap(source, passportWidth, passportHeight, true)
 }

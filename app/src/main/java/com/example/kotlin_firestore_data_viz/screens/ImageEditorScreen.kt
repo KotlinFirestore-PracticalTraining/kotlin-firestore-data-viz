@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -20,8 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.example.kotlin_firestore_data_viz.utils.cropBitmap
-import com.example.kotlin_firestore_data_viz.utils.resizeBitmap
 import com.example.kotlin_firestore_data_viz.controller.FilterControls
+import com.example.kotlin_firestore_data_viz.utils.resizeToPassportSize
 import com.example.kotlin_firestore_data_viz.utils.rotateBitmap
 import com.example.kotlin_firestore_data_viz.utils.saveBitmapToGallery
 
@@ -44,6 +45,20 @@ fun ImageEditorScreen() {
             }
             originalBitmap = bmp
             editedBitmap = bmp.copy(Bitmap.Config.ARGB_8888, true)
+        }
+    }
+
+    val saveAsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri: Uri? ->
+        uri?.let { outputUri ->
+            editedBitmap?.let { bitmap ->
+                context.contentResolver.openOutputStream(outputUri)?.use { outputStream ->
+                    if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
+                        Log.e("SaveAs", "Failed to save bitmap")
+                    } else {
+                        Toast.makeText(context, "Image saved successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
@@ -73,11 +88,6 @@ fun ImageEditorScreen() {
                     Text("Crop")
                 }
                 Button(onClick = {
-                    editedBitmap = resizeBitmap(bmp, 300, 300)
-                }) {
-                    Text("Resize")
-                }
-                Button(onClick = {
                     editedBitmap = editedBitmap?.let { rotateBitmap(it, 90f) }
                 }) {
                     Text("Rotate 90°")
@@ -87,6 +97,11 @@ fun ImageEditorScreen() {
                 }) {
                     Text("Save")
                 }
+                Button(onClick = {
+                    saveAsLauncher.launch("EditedImage_${System.currentTimeMillis()}.png")
+                }) {
+                    Text("Save As")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -95,6 +110,12 @@ fun ImageEditorScreen() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+                Button(onClick = {
+                    editedBitmap = editedBitmap?.let { resizeToPassportSize(it) }
+                }) {
+                    Text("Passport Size")
+                }
+
                 Button(onClick = {
                     editedBitmap = originalBitmap?.copy(Bitmap.Config.ARGB_8888, true)
                 }) {
@@ -107,14 +128,6 @@ fun ImageEditorScreen() {
                     imageUri = null
                 }) {
                     Text("Cancel")
-                }
-
-                Button(onClick = {
-                    originalBitmap = null
-                    editedBitmap = null
-                    imageUri = null
-                }) {
-                    Text("Back")
                 }
             }
 
