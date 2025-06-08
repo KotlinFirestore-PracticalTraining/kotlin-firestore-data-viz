@@ -15,6 +15,7 @@ import com.example.kotlin_firestore_data_viz.screens.ColorAnalysisScreen
 import com.example.kotlin_firestore_data_viz.screens.DataVizScreen
 import com.example.kotlin_firestore_data_viz.screens.ImageTransformScreen
 import com.example.kotlin_firestore_data_viz.screens.ImageDetectorScreen
+import com.example.kotlin_firestore_data_viz.screens.ImageEditorScreen
 
 
 
@@ -23,13 +24,15 @@ sealed class Screen(val route: String, val icon: ImageVector, val title: String)
     object ColorAnalysis  : Screen("color_analysis",  Icons.Filled.ColorLens,   "Colors" )
     object ImageTransform : Screen("image_transform", Icons.Filled.PhotoFilter, "Transform")
     object Detector       : Screen("image_detector",        Icons.Filled.Search, "Detector")
+    object ImageEditor    : Screen("image_editor", Icons.Filled.PhotoFilter, "Editor")
 }
 
 private val allScreens = listOf(
     Screen.DataViz,
     Screen.ColorAnalysis,
     Screen.ImageTransform,
-    Screen.Detector
+    Screen.Detector,
+    Screen.ImageEditor
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +78,10 @@ fun AppNavHost() {
             composable(Screen.Detector.route) {
                 ImageDetectorScreen()
             }
+            composable(Screen.ImageEditor.route) {
+                ImageEditorScreen()
+            }
+
         }
     }
 }
