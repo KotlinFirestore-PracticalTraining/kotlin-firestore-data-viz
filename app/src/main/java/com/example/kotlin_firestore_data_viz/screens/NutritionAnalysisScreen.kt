@@ -1,8 +1,8 @@
 package com.example.kotlin_firestore_data_viz.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -10,75 +10,46 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.kotlin_firestore_data_viz.viewmodels.FoodState
+import com.example.kotlin_firestore_data_viz.viewmodels.OpenFoodFactsViewModel
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
+import androidx.compose.ui.viewinterop.AndroidView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NutritionAnalysisScreen(
     navController: NavController,
-    qrData: String? = null,
-    barcode: String? = null
+    barcode: String?
 ) {
-    // Sample nutrition data - in a real app, you'd fetch this from an API
-    val (nutritionData, productName) = remember(qrData, barcode) {
-        when {
-            qrData != null -> Pair(
-                listOf(
-                    PieEntry(28f, "Protein"),
-                    PieEntry(42f, "Carbs"),
-                    PieEntry(30f, "Fat"),
-                    PieEntry(5f, "Fiber"),
-                    PieEntry(3f, "Sugar")
-                ),
-                "Organic Protein Bar"
-            )
-            barcode != null -> Pair(
-                listOf(
-                    PieEntry(18f, "Protein"),
-                    PieEntry(52f, "Carbs"),
-                    PieEntry(30f, "Fat"),
-                    PieEntry(8f, "Fiber"),
-                    PieEntry(12f, "Sugar")
-                ),
-                "Granola Cereal"
-            )
-            else -> Pair(
-                listOf(
-                    PieEntry(25f, "Protein"),
-                    PieEntry(35f, "Carbs"),
-                    PieEntry(40f, "Fat")
-                ),
-                "Generic Food Item"
-            )
-        }
-    }
+    val context = LocalContext.current
+    val viewModel: OpenFoodFactsViewModel = viewModel()
+    val foodState by viewModel.foodData.collectAsState()
 
-    val totalCalories = remember(nutritionData) {
-        nutritionData.sumOf { it.value.toInt() } * 4 // Simplified calculation
+    LaunchedEffect(barcode) {
+        if (barcode != null) {
+            viewModel.fetchProductByBarcode(barcode)
+        }
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Nutrition Analysis") },
+                title = { Text("Ravintoarvot / Nutrition Facts") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -86,103 +57,171 @@ fun NutritionAnalysisScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Product Information
-            if (qrData != null || barcode != null) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = productName,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "ID: ${qrData ?: barcode}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
+            when (foodState) {
+                is FoodState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
-            }
 
-            // Calories Summary
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    NutritionFactItem(value = "$totalCalories", label = "Calories")
-                    Divider(
-                        modifier = Modifier
-                            .height(50.dp)
-                            .width(1.dp),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
-                    NutritionFactItem(value = "${nutritionData.find { it.label == "Protein" }?.value?.toInt() ?: 0}g", label = "Protein")
-                    Divider(
-                        modifier = Modifier
-                            .height(50.dp)
-                            .width(1.dp),
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                    )
-                    NutritionFactItem(value = "${nutritionData.find { it.label == "Carbs" }?.value?.toInt() ?: 0}g", label = "Carbs")
-                }
-            }
-
-            // Pie Chart
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .padding(16.dp)
-                ) {
-                    AndroidView(
-                        factory = { context ->
-                            PieChart(context).apply {
-                                configurePieChart()
-                                setPieData(nutritionData)
-                            }
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-
-            // Nutrition Details
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Nutrition Details",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    nutritionData.forEach { entry ->
-                        NutritionDetailRow(
-                            name = entry.label ?: "Unknown",
-                            value = entry.value,
-                            unit = "% DV"
+                is FoodState.Error -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Tuotetta ei löytynyt\nProduct not found",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                if (barcode != null) {
+                                    viewModel.fetchProductByBarcode(barcode)
+                                }
+                            },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text("Yritä uudelleen / Try Again")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                val url = "https://world.openfoodfacts.org/add-new"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                context.startActivity(intent)
+                            },
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            Text("Lisää tuote / Add Product")
+                        }
+                    }
+                }
+
+                is FoodState.Success -> {
+                    val foodItem = (foodState as FoodState.Success)
+
+                    // Nutrition data for pie chart (filter out zero values)
+                    val nutritionData = mutableListOf<PieEntry>().apply {
+                        foodItem.protein?.takeIf { it > 0f }?.let { add(PieEntry(it, "Proteiini/Protein")) }
+                        foodItem.carbs?.takeIf { it > 0f }?.let { add(PieEntry(it, "Hiilihydraatit/Carbs")) }
+                        foodItem.fat?.takeIf { it > 0f }?.let { add(PieEntry(it, "Rasva/Fat")) }
+                        foodItem.sugar?.takeIf { it > 0f }?.let { add(PieEntry(it, "Sokeri/Sugar")) }
+                        foodItem.fiber?.takeIf { it > 0f }?.let { add(PieEntry(it, "Kuitu/Fiber")) }
+                    }
+
+                    Column {
+                        // Product info
+                        Text(
+                            text = foodItem.name,
+                            style = MaterialTheme.typography.headlineMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        foodItem.brand?.let { brand ->
+                            Text(
+                                text = brand,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+
+                        // Highlight Finnish products
+                        if (foodItem.origin?.contains("Finland", ignoreCase = true) == true ||
+                            foodItem.brand?.contains("Suomi", ignoreCase = true) == true) {
+                            Text(
+                                text = "🇫🇮 Suomalainen tuote / Finnish product",
+                                color = Color.Blue,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+
+                        // Pie Chart (only show if we have data)
+                        if (nutritionData.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(300.dp)
+                                    .padding(vertical = 16.dp)
+                            ) {
+                                AndroidView(
+                                    factory = { context ->
+                                        PieChart(context).apply {
+                                            // Basic configuration
+                                            setUsePercentValues(false)
+                                            description.isEnabled = false
+                                            setDrawEntryLabels(true)
+                                            setEntryLabelColor(android.graphics.Color.BLACK) // Using Android Color
+                                            setEntryLabelTextSize(12f)
+
+                                            // Visual customization
+                                            setDrawHoleEnabled(true)
+                                            holeRadius = 50f
+                                            transparentCircleRadius = 55f
+                                            setHoleColor(android.graphics.Color.TRANSPARENT) // Using Android Color
+
+                                            // Data setup
+                                            val dataSet = PieDataSet(nutritionData, "").apply {
+                                                colors = ColorTemplate.MATERIAL_COLORS.toList()
+                                                valueTextSize = 14f
+                                                valueTextColor = android.graphics.Color.WHITE // Using Android Color
+                                                setDrawValues(true)
+                                            }
+
+                                            data = PieData(dataSet).apply {
+                                                setValueFormatter(object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                                                    override fun getFormattedValue(value: Float): String {
+                                                        return "%.1fg".format(value)
+                                                    }
+                                                })
+                                            }
+
+                                            // Animation
+                                            animateY(1000)
+                                            invalidate()
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+
+                        // Nutrition details
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            foodItem.energy?.let {
+                                NutritionRow("Energia / Energy", "${it} kcal")
+                            }
+                            foodItem.protein?.let {
+                                NutritionRow("Proteiini / Protein", "${it}g")
+                            }
+                            foodItem.carbs?.let {
+                                NutritionRow("Hiilihydraatit / Carbs", "${it}g")
+                            }
+                            foodItem.fat?.let {
+                                NutritionRow("Rasva / Fat", "${it}g")
+                            }
+                            foodItem.sugar?.let {
+                                NutritionRow("Sokeri / Sugar", "${it}g")
+                            }
+                            foodItem.fiber?.let {
+                                NutritionRow("Kuitu / Fiber", "${it}g")
+                            }
+                            foodItem.salt?.let {
+                                NutritionRow("Suola / Salt", "${it}g")
+                            }
+                            foodItem.servingSize?.let {
+                                NutritionRow("Annoskoko / Serving Size", it)
+                            }
+                        }
                     }
                 }
             }
@@ -191,93 +230,21 @@ fun NutritionAnalysisScreen(
 }
 
 @Composable
-private fun NutritionFactItem(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-    }
-}
-
-@Composable
-private fun NutritionDetailRow(name: String, value: Float, unit: String) {
+private fun NutritionRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = name, style = MaterialTheme.typography.bodyMedium)
         Text(
-            text = "${value.toInt()}$unit",
-            style = MaterialTheme.typography.bodyMedium,
+            text = label,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold
         )
     }
-}
-
-private fun PieChart.configurePieChart() {
-    setUsePercentValues(true)
-    description.isEnabled = false
-    setExtraOffsets(5f, 10f, 5f, 5f)
-    dragDecelerationFrictionCoef = 0.95f
-
-    isDrawHoleEnabled = true
-    setHoleColor(Color.White.value.toInt())
-    setTransparentCircleColor(Color.White.value.toInt())
-    holeRadius = 58f
-    transparentCircleRadius = 61f
-    setDrawCenterText(true)
-    centerText = "Nutrition\nBreakdown"
-
-    rotationAngle = 0f
-    isRotationEnabled = true
-    isHighlightPerTapEnabled = true
-
-    val legend = legend
-    legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-    legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-    legend.orientation = Legend.LegendOrientation.HORIZONTAL
-    legend.setDrawInside(false)
-    legend.xEntrySpace = 7f
-    legend.yEntrySpace = 0f
-    legend.yOffset = 0f
-}
-
-private fun PieChart.setPieData(data: List<PieEntry>) {
-    val dataSet = PieDataSet(data, "").apply {
-        sliceSpace = 3f
-        selectionShift = 5f
-        colors = ColorTemplate.createColors(
-            intArrayOf(
-                0xFF4CAF50.toInt(),  // Green
-                0xFF2196F3.toInt(),  // Blue
-                0xFFF44336.toInt(),  // Red
-                0xFFFFC107.toInt(),  // Amber
-                0xFF9C27B0.toInt()   // Purple
-            )
-        )
-        valueLinePart1OffsetPercentage = 80f
-        valueLinePart1Length = 0.3f
-        valueLinePart2Length = 0.4f
-        valueLineColor = Color.Black.value.toInt()
-        yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
-    }
-
-    val pieData = PieData(dataSet).apply {
-        setValueFormatter(PercentFormatter(this@setPieData))
-        setValueTextSize(12f)
-        setValueTextColor(Color.Black.value.toInt())
-    }
-
-    this.data = pieData
-    invalidate()
 }

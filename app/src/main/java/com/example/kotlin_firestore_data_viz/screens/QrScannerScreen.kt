@@ -27,6 +27,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -44,6 +45,7 @@ fun QrScannerScreen(navController: NavController) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var torchEnabled by remember { mutableStateOf(false) }
 
+    // Handle permission state
     LaunchedEffect(cameraPermissionState.status) {
         if (!cameraPermissionState.status.isGranted && !cameraPermissionState.status.shouldShowRationale) {
             cameraPermissionState.launchPermissionRequest()
@@ -178,12 +180,14 @@ fun CameraPreview(
                         it.setSurfaceProvider(previewView.surfaceProvider)
                     }
 
+                    // Configure barcode scanner
                     val options = BarcodeScannerOptions.Builder()
                         .setBarcodeFormats(
-                            Barcode.FORMAT_QR_CODE,
-                            Barcode.FORMAT_EAN_13,
+                            Barcode.FORMAT_EAN_13,  // Most common Finnish product barcode
+                            Barcode.FORMAT_EAN_8,
                             Barcode.FORMAT_UPC_A,
-                            Barcode.FORMAT_CODE_128
+                            Barcode.FORMAT_UPC_E,
+                            Barcode.FORMAT_QR_CODE
                         )
                         .build()
 
@@ -209,6 +213,7 @@ fun CameraPreview(
                                         }
                                         .addOnFailureListener { e ->
                                             onError("Scan failed: ${e.localizedMessage}")
+                                            Log.e("BarcodeScanner", "Scan error", e)
                                         }
                                         .addOnCompleteListener {
                                             imageProxy.close()
