@@ -15,6 +15,7 @@ import com.example.kotlin_firestore_data_viz.screens.*
 
 sealed class Screen(val route: String, val icon: ImageVector, val title: String) {
     object DataViz : Screen("data_viz", Icons.Filled.BarChart, "Charts")
+    object Graphing     : Screen("graphing",      Icons.Filled.ShowChart,       "Graph")
     object ColorAnalysis : Screen("color_analysis", Icons.Filled.ColorLens, "Colors")
     object Detector : Screen("image_detector", Icons.Filled.Search, "Detector")
     object ImageEditor : Screen("image_editor", Icons.Filled.PhotoFilter, "Editor")
@@ -24,6 +25,7 @@ sealed class Screen(val route: String, val icon: ImageVector, val title: String)
 private val allScreens = listOf(
     Screen.DataViz,
     Screen.ColorAnalysis,
+    Screen.Graphing,
     Screen.Detector,
     Screen.ImageEditor,
     Screen.FoodSection
@@ -63,6 +65,7 @@ fun AppNavHost() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.DataViz.route) { DataVizScreen() }
+            composable(Screen.Graphing.route) { GraphingScreen() }
             composable(Screen.ColorAnalysis.route) { ColorAnalysisScreen() }
             composable(Screen.Detector.route) { ImageDetectorScreen() }
             composable(Screen.ImageEditor.route) { ImageEditorScreen() }
