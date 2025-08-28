@@ -87,4 +87,17 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.7.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.0")
 
+    // ML Kit Barcode Scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+    // Camera Permission helper
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+
+    // Retrofit for API calls
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // If you need Coil for image loading (optional)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
 }
