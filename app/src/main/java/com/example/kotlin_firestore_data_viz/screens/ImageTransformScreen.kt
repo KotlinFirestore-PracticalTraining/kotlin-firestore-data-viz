@@ -18,6 +18,6 @@ fun ImageTransformScreen() {
     ) {
         Text("Image Transformation Screen")
         Spacer(Modifier.height(8.dp))
-        Text("Here you’ll later apply filters, edits, etc.")
+        Text("Here we will later apply filters, edits, etc.")
     }
 }
