@@ -100,4 +100,5 @@ dependencies {
     // If you need Coil for image loading (optional)
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    implementation(libs.exp4j)
 }
