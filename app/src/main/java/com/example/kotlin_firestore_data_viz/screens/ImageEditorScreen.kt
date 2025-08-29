@@ -1,7 +1,6 @@
 package com.example.kotlin_firestore_data_viz.screens
 
 import android.graphics.*
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -12,20 +11,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
-import com.example.kotlin_firestore_data_viz.utils.cropBitmap
 import com.example.kotlin_firestore_data_viz.controller.FilterControls
-import com.example.kotlin_firestore_data_viz.utils.resizeToPassportSize
-import com.example.kotlin_firestore_data_viz.utils.rotateBitmap
-import com.example.kotlin_firestore_data_viz.utils.saveBitmapToGallery
-
+import com.example.kotlin_firestore_data_viz.utils.*
 
 @Composable
 fun ImageEditorScreen() {
@@ -33,6 +30,16 @@ fun ImageEditorScreen() {
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var originalBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var editedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    var redValue by remember { mutableStateOf(1f) }
+    var greenValue by remember { mutableStateOf(1f) }
+    var blueValue by remember { mutableStateOf(1f) }
+
+    LaunchedEffect(redValue, greenValue, blueValue) {
+        originalBitmap?.let {
+            editedBitmap = applyRgbFilter(it, redValue, greenValue, blueValue)
+        }
+    }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
@@ -42,9 +49,12 @@ fun ImageEditorScreen() {
             } else {
                 val source = ImageDecoder.createSource(context.contentResolver, it)
                 ImageDecoder.decodeBitmap(source)
-            }
+            }.copy(Bitmap.Config.ARGB_8888, true)
             originalBitmap = bmp
             editedBitmap = bmp.copy(Bitmap.Config.ARGB_8888, true)
+            redValue = 1f
+            greenValue = 1f
+            blueValue = 1f
         }
     }
 
@@ -62,7 +72,13 @@ fun ImageEditorScreen() {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    // --- MODIFICATION: Added verticalScroll modifier to the main Column ---
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()) // This line makes the entire screen's content scroll
+    ) {
         Button(onClick = { launcher.launch("image/*") }) {
             Text("Select Image")
         }
@@ -118,6 +134,9 @@ fun ImageEditorScreen() {
 
                 Button(onClick = {
                     editedBitmap = originalBitmap?.copy(Bitmap.Config.ARGB_8888, true)
+                    redValue = 1f
+                    greenValue = 1f
+                    blueValue = 1f
                 }) {
                     Text("Reset")
                 }
@@ -133,10 +152,44 @@ fun ImageEditorScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Use originalBitmap for filtering, update editedBitmap
+            originalBitmap?.let {
+                Column {
+                    Text("RGB Color Adjustment", style = MaterialTheme.typography.subtitle1)
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("R", color = Color.Red, modifier = Modifier.width(20.dp))
+                        Slider(
+                            value = redValue,
+                            onValueChange = { redValue = it },
+                            valueRange = 0f..2f
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("G", color = Color.Green, modifier = Modifier.width(20.dp))
+                        Slider(
+                            value = greenValue,
+                            onValueChange = { greenValue = it },
+                            valueRange = 0f..2f
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("B", color = Color.Blue, modifier = Modifier.width(20.dp))
+                        Slider(
+                            value = blueValue,
+                            onValueChange = { blueValue = it },
+                            valueRange = 0f..2f
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             originalBitmap?.let { original ->
                 FilterControls(source = original) { newBmp ->
                     editedBitmap = newBmp
+                    redValue = 1f
+                    greenValue = 1f
+                    blueValue = 1f
                 }
             }
         }
