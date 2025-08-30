@@ -1,7 +1,7 @@
 package com.example.kotlin_firestore_data_viz.screens
 
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder // <<< FIX: ADD THIS IMPORT
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -33,28 +33,56 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.kotlin_firestore_data_viz.controller.FilterControls
+import com.example.kotlin_firestore_data_viz.controller.AdjustmentControls
 import com.example.kotlin_firestore_data_viz.utils.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
 
 @Composable
 fun ImageEditorScreen() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // --- STATE MANAGEMENT ---
     var originalBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var transformedBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var editedBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    // State for RGB sliders
+    // State for all non-destructive adjustments
     var redValue by remember { mutableStateOf(1f) }
     var greenValue by remember { mutableStateOf(1f) }
     var blueValue by remember { mutableStateOf(1f) }
+    var saturation by remember { mutableStateOf(1f) }
+    var brightness by remember { mutableStateOf(1f) }
+    var contrast by remember { mutableStateOf(1f) }
+    var grayscale by remember { mutableStateOf(false) }
 
-    // This effect applies the RGB filter whenever slider values change.
-    LaunchedEffect(redValue, greenValue, blueValue, originalBitmap) {
-        if (originalBitmap != null) {
-            editedBitmap = applyRgbFilter(originalBitmap!!, redValue, greenValue, blueValue)
+    // --- CENTRAL RENDERING EFFECT ---
+    LaunchedEffect(
+        transformedBitmap, redValue, greenValue, blueValue,
+        saturation, brightness, contrast, grayscale
+    ) {
+        transformedBitmap?.let { source ->
+            scope.launch {
+                val result = withContext(Dispatchers.Default) {
+                    applyAllAdjustments(
+                        source = source,
+                        saturation = if (grayscale) 0f else saturation,
+                        brightness = brightness,
+                        contrast = contrast,
+                        red = redValue,
+                        green = greenValue,
+                        blue = blueValue
+                    )
+                }
+                editedBitmap = result
+            }
         }
     }
 
+    // --- IMAGE LAUNCHERS ---
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             val bmp = if (Build.VERSION.SDK_INT < 28) {
@@ -63,12 +91,13 @@ fun ImageEditorScreen() {
                 val source = ImageDecoder.createSource(context.contentResolver, it)
                 ImageDecoder.decodeBitmap(source)
             }.copy(Bitmap.Config.ARGB_8888, true)
+
             originalBitmap = bmp
-            editedBitmap = bmp.copy(Bitmap.Config.ARGB_8888, true)
-            // Reset sliders when a new image is loaded
-            redValue = 1f
-            greenValue = 1f
-            blueValue = 1f
+            transformedBitmap = bmp.copy(Bitmap.Config.ARGB_8888, true)
+            // Reset all adjustment parameters
+            redValue = 1f; greenValue = 1f; blueValue = 1f
+            saturation = 1f; brightness = 1f; contrast = 1f
+            grayscale = false
         }
     }
 
@@ -86,6 +115,7 @@ fun ImageEditorScreen() {
         }
     }
 
+    // --- UI ---
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,6 +123,7 @@ fun ImageEditorScreen() {
                 actions = {
                     IconButton(onClick = {
                         originalBitmap = null
+                        transformedBitmap = null
                         editedBitmap = null
                     }) {
                         Icon(Icons.Default.Close, contentDescription = "Close Image")
@@ -103,38 +134,131 @@ fun ImageEditorScreen() {
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             if (originalBitmap == null) {
-                // Show a placeholder screen if no image is selected
                 SelectImagePlaceholder(onSelectClick = { launcher.launch("image/*") })
             } else {
-                // Show the main editor UI
                 EditorContent(
                     editedBitmap = editedBitmap,
-                    redValue = redValue,
-                    onRedChange = { redValue = it },
-                    greenValue = greenValue,
-                    onGreenChange = { greenValue = it },
-                    blueValue = blueValue,
-                    onBlueChange = { blueValue = it },
-                    onCropClick = { editedBitmap?.let { editedBitmap = cropBitmap(it) } },
-                    onRotateClick = { editedBitmap?.let { editedBitmap = rotateBitmap(it, 90f) } },
-                    onPassportClick = { editedBitmap?.let { editedBitmap = resizeToPassportSize(it) } },
+                    redValue = redValue, onRedChange = { redValue = it },
+                    greenValue = greenValue, onGreenChange = { greenValue = it },
+                    blueValue = blueValue, onBlueChange = { blueValue = it },
+                    saturation = saturation, onSaturationChange = { saturation = it },
+                    brightness = brightness, onBrightnessChange = { brightness = it },
+                    contrast = contrast, onContrastChange = { contrast = it },
+                    grayscale = grayscale, onGrayscaleChange = { grayscale = it },
+                    onCropClick = { transformedBitmap?.let { transformedBitmap = cropBitmap(it) } },
+                    onRotateClick = { transformedBitmap?.let { transformedBitmap = rotateBitmap(it, 90f) } },
+                    onPassportClick = { transformedBitmap?.let { transformedBitmap = resizeToPassportSize(it) } },
                     onSaveClick = { editedBitmap?.let { saveBitmapToGallery(context, it) } },
                     onSaveAsClick = { saveAsLauncher.launch("EditedImage_${System.currentTimeMillis()}.png") },
                     onResetClick = {
-                        editedBitmap = originalBitmap?.copy(Bitmap.Config.ARGB_8888, true)
-                        redValue = 1f
-                        greenValue = 1f
-                        blueValue = 1f
-                    },
-                    originalBitmap = originalBitmap,
-                    onFilterApplied = { newBmp ->
-                        editedBitmap = newBmp
-                        redValue = 1f
-                        greenValue = 1f
-                        blueValue = 1f
+                        transformedBitmap = originalBitmap?.copy(Bitmap.Config.ARGB_8888, true)
+                        redValue = 1f; greenValue = 1f; blueValue = 1f
+                        saturation = 1f; brightness = 1f; contrast = 1f
+                        grayscale = false
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun EditorContent(
+    editedBitmap: Bitmap?,
+    redValue: Float, onRedChange: (Float) -> Unit,
+    greenValue: Float, onGreenChange: (Float) -> Unit,
+    blueValue: Float, onBlueChange: (Float) -> Unit,
+    saturation: Float, onSaturationChange: (Float) -> Unit,
+    brightness: Float, onBrightnessChange: (Float) -> Unit,
+    contrast: Float, onContrastChange: (Float) -> Unit,
+    grayscale: Boolean, onGrayscaleChange: (Boolean) -> Unit,
+    onCropClick: () -> Unit, onRotateClick: () -> Unit, onPassportClick: () -> Unit,
+    onSaveClick: () -> Unit, onSaveAsClick: () -> Unit, onResetClick: () -> Unit
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Transform", "Adjust")
+
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth().height(300.dp).padding(16.dp),
+            elevation = 4.dp, shape = RoundedCornerShape(8.dp)
+        ) {
+            if (editedBitmap != null) {
+                Image(
+                    bitmap = editedBitmap.asImageBitmap(),
+                    contentDescription = "Edited Image",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(onClick = onSaveClick) { Icon(Icons.Default.Save, "Save"); Spacer(Modifier.width(4.dp)); Text("Save") }
+            OutlinedButton(onClick = onSaveAsClick) { Text("Save As") }
+            OutlinedButton(onClick = onResetClick) { Icon(Icons.Default.RestartAlt, "Reset"); Spacer(Modifier.width(4.dp)); Text("Reset") }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(selected = selectedTabIndex == index, onClick = { selectedTabIndex = index }, text = { Text(title) })
+            }
+        }
+
+        Box(modifier = Modifier.padding(16.dp)) {
+            AnimatedContent(targetState = selectedTabIndex) { tabIndex ->
+                when (tabIndex) {
+                    0 -> TransformTab(onCropClick, onRotateClick, onPassportClick)
+                    1 -> AdjustTab(
+                        redValue, onRedChange, greenValue, onGreenChange, blueValue, onBlueChange,
+                        saturation, onSaturationChange, brightness, onBrightnessChange,
+                        contrast, onContrastChange, grayscale, onGrayscaleChange
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AdjustTab(
+    redValue: Float, onRedChange: (Float) -> Unit,
+    greenValue: Float, onGreenChange: (Float) -> Unit,
+    blueValue: Float, onBlueChange: (Float) -> Unit,
+    saturation: Float, onSaturationChange: (Float) -> Unit,
+    brightness: Float, onBrightnessChange: (Float) -> Unit,
+    contrast: Float, onContrastChange: (Float) -> Unit,
+    grayscale: Boolean, onGrayscaleChange: (Boolean) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Color Balance", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Bold)
+            ColorSlider(label = "Red", value = redValue, onValueChange = onRedChange, color = Color.Red)
+            ColorSlider(label = "Green", value = greenValue, onValueChange = onGreenChange, color = Color.Green)
+            ColorSlider(label = "Blue", value = blueValue, onValueChange = onBlueChange, color = Color.Blue)
+        }
+
+        Divider()
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Image Adjustments", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Bold)
+            AdjustmentControls(
+                saturation, onSaturationChange,
+                brightness, onBrightnessChange,
+                contrast, onContrastChange,
+                grayscale, onGrayscaleChange
+            )
         }
     }
 }
@@ -165,88 +289,6 @@ fun SelectImagePlaceholder(onSelectClick: () -> Unit) {
         }
     }
 }
-
-@Composable
-fun EditorContent(
-    editedBitmap: Bitmap?,
-    redValue: Float, onRedChange: (Float) -> Unit,
-    greenValue: Float, onGreenChange: (Float) -> Unit,
-    blueValue: Float, onBlueChange: (Float) -> Unit,
-    onCropClick: () -> Unit,
-    onRotateClick: () -> Unit,
-    onPassportClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onSaveAsClick: () -> Unit,
-    onResetClick: () -> Unit,
-    originalBitmap: Bitmap?,
-    onFilterApplied: (Bitmap) -> Unit
-) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabs = listOf("Transform", "Adjust", "Filters")
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Image Preview
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .padding(16.dp),
-            elevation = 4.dp,
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            editedBitmap?.let {
-                Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = "Edited Image",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                )
-            }
-        }
-
-        // Global Action Buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = onSaveClick) { Icon(Icons.Default.Save, contentDescription = "Save"); Spacer(Modifier.width(4.dp)); Text("Save") }
-            OutlinedButton(onClick = onSaveAsClick) { Text("Save As") }
-            OutlinedButton(onClick = onResetClick) { Icon(Icons.Default.RestartAlt, contentDescription = "Reset"); Spacer(Modifier.width(4.dp)); Text("Reset") }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Tab Layout for Editing Tools
-        TabRow(selectedTabIndex = selectedTabIndex) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(title) }
-                )
-            }
-        }
-
-        // Content for the selected tab
-        Box(modifier = Modifier.padding(16.dp)) {
-            AnimatedContent(targetState = selectedTabIndex) { tabIndex ->
-                when (tabIndex) {
-                    0 -> TransformTab(onCropClick, onRotateClick, onPassportClick)
-                    1 -> AdjustTab(redValue, onRedChange, greenValue, onGreenChange, blueValue, onBlueChange)
-                    2 -> FilterTab(originalBitmap, onFilterApplied)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun TransformTab(onCropClick: () -> Unit, onRotateClick: () -> Unit, onPassportClick: () -> Unit) {
     Row(
@@ -259,48 +301,6 @@ fun TransformTab(onCropClick: () -> Unit, onRotateClick: () -> Unit, onPassportC
         EditorToolButton(icon = Icons.Default.ContactMail, text = "Passport", onClick = onPassportClick)
     }
 }
-
-@Composable
-fun AdjustTab(
-    redValue: Float, onRedChange: (Float) -> Unit,
-    greenValue: Float, onGreenChange: (Float) -> Unit,
-    blueValue: Float, onBlueChange: (Float) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("RGB Color Adjustment", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.Bold)
-        ColorSlider(
-            label = "Red",
-            value = redValue,
-            onValueChange = onRedChange,
-            color = Color.Red
-        )
-        ColorSlider(
-            label = "Green",
-            value = greenValue,
-            onValueChange = onGreenChange,
-            color = Color.Green
-        )
-        ColorSlider(
-            label = "Blue",
-            value = blueValue,
-            onValueChange = onBlueChange,
-            color = Color.Blue
-        )
-        // You can add other sliders (Brightness, Contrast etc.) from FilterControls here
-    }
-}
-
-@Composable
-fun FilterTab(editedBitmap: Bitmap?, onBitmapChanged: (Bitmap) -> Unit) {
-    if (editedBitmap != null) {
-        // Pass the current editedBitmap to FilterControls
-        FilterControls(source = editedBitmap, onBitmapChanged = onBitmapChanged)
-    } else {
-        Text("Load an image to see filters.")
-    }
-}
-
-
 @Composable
 fun ColorSlider(label: String, value: Float, onValueChange: (Float) -> Unit, color: Color) {
     val decimalFormat = remember { DecimalFormat("0.00") }
@@ -324,7 +324,6 @@ fun ColorSlider(label: String, value: Float, onValueChange: (Float) -> Unit, col
         )
     }
 }
-
 @Composable
 fun EditorToolButton(icon: ImageVector, text: String, onClick: () -> Unit) {
     Column(
