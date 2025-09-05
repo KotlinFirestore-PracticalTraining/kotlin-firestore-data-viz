@@ -82,12 +82,10 @@ fun AppNavHost() {
                     barcode = barcode
                 )
             }
-
-            // Other screens
-            composable("eCodeExplainer") { ECodeExplainerScreen(navController) }
             composable("ingredientChecker") { IngredientCheckerScreen(navController) }
             composable("foodComparison") { FoodComparisonScreen(navController) }
             composable("labelScanner") { LabelScannerScreen(navController) }
+            composable("eCodeExplainer") { ECodesLibraryScreen(navController) }
         }
     }
 }

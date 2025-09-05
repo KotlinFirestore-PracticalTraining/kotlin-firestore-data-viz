@@ -41,8 +41,8 @@ android {
 }
 
 dependencies {
-    implementation("de.androidpit:color-thief:1.1.2")
-    implementation("androidx.palette:palette-ktx:1.0.0")
+    implementation(libs.color.thief)
+    implementation(libs.androidx.palette.ktx)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.ui.text)
     implementation(libs.mpandroidchart)
