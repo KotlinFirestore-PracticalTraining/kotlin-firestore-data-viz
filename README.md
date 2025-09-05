@@ -7,21 +7,21 @@ The **Multi-Feature Application** is a comprehensive Android app built with **Ko
 
 ## Key Features
 
-### 1. Charts
-- Interactive data visualization with bar, line, and pie charts.
-- Customizable chart styles and themes.
+### 1. Data Visualization
+- Interactive charts including Bar, Line, and Pie for user-generated data.
+- Supports dynamic updates, customizable styles, and theme integration.
 
 ### 2. Color Analyzer
-- Extract RGB, HEX, and HSL values from images or live camera feed.
-- Identify dominant and complementary colors.
+- Extracts RGB, HEX, and HSL values from images or live camera input.
+- Identifies dominant and complementary colors for design or research use.
 
 ### 3. Function Plotter
-- Plot mathematical functions, including linear, quadratic, and trigonometric.
-- Zoom and pan for detailed analysis.
+- Plots mathematical functions such as linear, quadratic, and trigonometric.
+- Provides zooming and panning capabilities for detailed inspection..
 
 ### 4. AI Vision Detection
-- Detect objects in images or live camera feed using AI.
-- Provides labels and confidence scores for detected objects.
+- Leverages on-device ML models for object detection.
+- Outputs labels with confidence scores, enabling intelligent image analysis.
 
 ### 5. Image Editor
 - Transformations: Crop, Rotate, Resize.
@@ -30,8 +30,11 @@ The **Multi-Feature Application** is a comprehensive Android app built with **Ko
 - Save edited images to the gallery or as new files.
 
 ### 6. Food Tools
-- **QR Code Scanner**: Scan food-related QR codes for quick information.
-- **E-Code Explainer**: Look up and understand the meaning of food E-codes.
+- **QR Code Scanner**: Fetches food product details via barcode/QR scan.
+- **E-Code Explainer**: Decodes additives and provides health-related insights.
+- **Ingredient Checker**: Analyzes ingredient lists for allergens and dietary preferences.
+- **Nutrition Analyzer**: Breaks down nutritional information for informed choices.
+- **Food Comparison**: Side-by-side comparison of nutritional values and ingredients.
 
 ---
 
