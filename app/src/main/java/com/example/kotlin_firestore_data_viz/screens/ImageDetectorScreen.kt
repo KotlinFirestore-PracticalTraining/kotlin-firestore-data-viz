@@ -54,7 +54,7 @@ fun ImageDetectorScreen() {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
-    val cameraHeight = screenHeight * 0.5f
+    val cameraHeight = screenHeight * 0.45f
 
     var useCamera by remember { mutableStateOf(true) }
     val description = remember { mutableStateOf("Ready to analyze images") }
@@ -75,7 +75,7 @@ fun ImageDetectorScreen() {
                 description.value = if (labels.isEmpty()) {
                     "No objects detected in this image"
                 } else {
-                    "Found ${labels.size} object${if (labels.size > 1) "s" else ""}"
+                    "Found ${labels.size} object${if (labels.size > 1) "s" else ""} with AI analysis"
                 }
             }
         }
@@ -88,151 +88,212 @@ fun ImageDetectorScreen() {
                 Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surface
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     )
                 )
             )
     ) {
-        // Wrap the Column in a VerticalScroll
         val scrollState = rememberScrollState()
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)  // Make the column scrollable
-                .padding(20.dp)
+                .verticalScroll(scrollState)
+                .padding(16.dp)
         ) {
-            // Header
+            // Enhanced Header
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = 20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Visibility,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        shape = CircleShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Visibility,
+                                contentDescription = null,
+                                modifier = Modifier.size(28.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "AI Image Recognition",
+                        text = "AI Vision Detection",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Detect objects in real-time or from gallery",
+                        text = "Powered by Google ML Kit • Real-time object recognition",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
 
-            // Mode Selection Buttons
+            // Enhanced Mode Selection
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Camera Button
-                    ElevatedButton(
-                        onClick = {
-                            useCamera = true
-                            description.value = "Point camera at objects to detect them"
-                            detectedLabels = emptyList()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        colors = ButtonDefaults.elevatedButtonColors(
-                            containerColor = if (useCamera)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.surface,
-                            contentColor = if (useCamera)
-                                MaterialTheme.colorScheme.onPrimary
-                            else
-                                MaterialTheme.colorScheme.onSurface
-                        ),
-                        elevation = ButtonDefaults.elevatedButtonElevation(
-                            defaultElevation = if (useCamera) 8.dp else 2.dp
-                        )
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CameraAlt,
+                            imageVector = Icons.Default.Settings,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Camera",
-                            fontWeight = FontWeight.Medium
+                            text = "Detection Mode",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
-                    // Gallery Button
-                    ElevatedButton(
-                        onClick = {
-                            useCamera = false
-                            imagePickerLauncher.launch("image/*")
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        colors = ButtonDefaults.elevatedButtonColors(
-                            containerColor = if (!useCamera)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.surface,
-                            contentColor = if (!useCamera)
-                                MaterialTheme.colorScheme.onPrimary
-                            else
-                                MaterialTheme.colorScheme.onSurface
-                        ),
-                        elevation = ButtonDefaults.elevatedButtonElevation(
-                            defaultElevation = if (!useCamera) 8.dp else 2.dp
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoLibrary,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Gallery",
-                            fontWeight = FontWeight.Medium
-                        )
+                        // Camera Button
+                        Card(
+                            onClick = {
+                                useCamera = true
+                                description.value = "Point camera at objects for real-time detection"
+                                detectedLabels = emptyList()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(80.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (useCamera)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = if (useCamera) 8.dp else 2.dp
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CameraAlt,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = if (useCamera)
+                                        MaterialTheme.colorScheme.onPrimary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Live Camera",
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (useCamera)
+                                        MaterialTheme.colorScheme.onPrimary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Gallery Button
+                        Card(
+                            onClick = {
+                                useCamera = false
+                                imagePickerLauncher.launch("image/*")
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(80.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (!useCamera)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = if (!useCamera) 8.dp else 2.dp
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoLibrary,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = if (!useCamera)
+                                        MaterialTheme.colorScheme.onPrimary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "From Gallery",
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (!useCamera)
+                                        MaterialTheme.colorScheme.onPrimary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            // Camera/Image Display Area - Fixed to 50vh
+            // Enhanced Camera/Image Display
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(cameraHeight)  // Fixed height here
+                    .height(cameraHeight)
                     .padding(bottom = 20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(16.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -244,13 +305,12 @@ fun ImageDetectorScreen() {
                             onLabelsDetected = { labels ->
                                 detectedLabels = labels
                                 description.value = if (labels.isEmpty()) {
-                                    "No objects detected"
+                                    "No objects detected • Try pointing at different objects"
                                 } else {
-                                    "Detecting ${labels.size} object${if (labels.size > 1) "s" else ""}"
+                                    "Live detection: ${labels.size} object${if (labels.size > 1) "s" else ""} found"
                                 }
                             },
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
+                            modifier = Modifier.clip(RoundedCornerShape(20.dp))
                         )
                     } else {
                         selectedImageUri?.let { uri ->
@@ -262,58 +322,89 @@ fun ImageDetectorScreen() {
                                     contentDescription = null,
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .clip(RoundedCornerShape(16.dp)),
+                                        .clip(RoundedCornerShape(20.dp)),
                                     contentScale = ContentScale.Crop
                                 )
                             }
                         } ?: run {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(32.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.AddPhotoAlternate,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Card(
+                                    shape = CircleShape,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                    ),
+                                    modifier = Modifier.size(80.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddPhotoAlternate,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(40.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(20.dp))
                                 Text(
-                                    text = "Select an image from gallery",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    textAlign = TextAlign.Center
+                                    text = "Select an Image",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Choose from gallery to analyze objects",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
                         }
                     }
 
-                    // Loading overlay
+                    // Enhanced Loading overlay
                     if (isLoading) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.7f)),
+                                .background(Color.Black.copy(alpha = 0.8f))
+                                .clip(RoundedCornerShape(20.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Card(
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
                                 ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column(
-                                    modifier = Modifier.padding(24.dp),
+                                    modifier = Modifier.padding(32.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(32.dp),
-                                        strokeWidth = 3.dp
+                                        modifier = Modifier.size(40.dp),
+                                        strokeWidth = 4.dp,
+                                        color = MaterialTheme.colorScheme.primary
                                     )
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
                                     Text(
-                                        text = "Analyzing image...",
-                                        style = MaterialTheme.typography.bodyMedium
+                                        text = "AI is analyzing...",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "Detecting objects in image",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(top = 4.dp)
                                     )
                                 }
                             }
@@ -322,12 +413,13 @@ fun ImageDetectorScreen() {
                 }
             }
 
-            // Results Section - Now scrollable within the main scrollable column
+            // Enhanced Results Section
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 20.dp),  // Removed weight since we're scrolling
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    .padding(bottom = 20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp)
@@ -345,11 +437,26 @@ fun ImageDetectorScreen() {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Detection Results",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
+                        if (detectedLabels.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "${detectedLabels.size}",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
                     }
 
                     AnimatedContent(
@@ -368,14 +475,14 @@ fun ImageDetectorScreen() {
                         )
                     }
 
-                    // Labels with confidence scores
+                    // Enhanced Labels with confidence scores
                     if (detectedLabels.isNotEmpty()) {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.heightIn(max = 200.dp)
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.heightIn(max = 250.dp)
                         ) {
-                            items(detectedLabels.take(5)) { label ->
-                                DetectionLabel(label = label)
+                            items(detectedLabels.take(8)) { label ->
+                                EnhancedDetectionLabel(label = label)
                             }
                         }
                     }
@@ -386,50 +493,76 @@ fun ImageDetectorScreen() {
 }
 
 @Composable
-private fun DetectionLabel(label: ImageLabel) {
+private fun EnhancedDetectionLabel(label: ImageLabel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = label.text,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
-            )
-
-            // Confidence indicator
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Card(
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    ),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Visibility,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = label.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Enhanced confidence indicator
+            Column(
+                horizontalAlignment = Alignment.End
             ) {
                 val confidence = (label.confidence * 100).toInt()
                 Text(
                     text = "$confidence%",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
                     progress = label.confidence,
                     modifier = Modifier
-                        .width(60.dp)
-                        .height(4.dp)
-                        .clip(CircleShape),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        .width(80.dp)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (confidence >= 70) MaterialTheme.colorScheme.primary
+                    else if (confidence >= 50) MaterialTheme.colorScheme.tertiary
+                    else MaterialTheme.colorScheme.outline,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
         }

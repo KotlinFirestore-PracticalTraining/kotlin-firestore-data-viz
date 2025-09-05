@@ -2,6 +2,7 @@
 accompanistPermissions = "0.34.0"
 agp = "8.9.3"
 barcodeScanning = "17.3.0"
+colorThief = "1.1.2"
 converterGson = "2.9.0"
 firebaseBom = "33.14.0"
 foundation = "1.8.2"
@@ -25,12 +26,15 @@ mlkit-object-detection = "17.0.2"
 objectDetection = "17.0.2"
 imageLabeling = "16.0.9"
 imageLabelingCommon = "18.1.0"
+paletteKtx = "1.0.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
+androidx-palette-ktx = { module = "androidx.palette:palette-ktx", version.ref = "paletteKtx" }
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
+color-thief = { module = "de.androidpit:color-thief", version.ref = "colorThief" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
