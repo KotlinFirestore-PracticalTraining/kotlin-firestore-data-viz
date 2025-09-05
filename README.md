@@ -47,62 +47,66 @@ The **Multi-Feature Application** is a comprehensive Android app built with **Ko
 ---
 ## Project Structure
 The project is organized into the following main packages:
+## 📂 Project Structure
+
+```text
 kotlin-firestore-data-viz/
 │── app/
-│ ├── manifests/
-│ │ └── AndroidManifest.xml
-│ │
-│ ├── java/com/example/kotlin_firestore_data_viz/
-│ │ ├── controller/ # UI controls & interactions
-│ │ │ └── FilterControls.kt
-│ │ │
-│ │ ├── data/ # Local storage & data handling
-│ │ │ └── LocalAdditives.kt
-│ │ │
-│ │ ├── navigation/ # Navigation components
-│ │ │ └── AppNavHost.kt
-│ │ │
-│ │ ├── network/ # API and network services
-│ │ │ ├── FoodApiService.kt
-│ │ │ └── IngredientsTaxonomyService.kt
-│ │ │
-│ │ ├── screens/ # UI screens
-│ │ │ ├── ColorAnalysisScreen.kt
-│ │ │ ├── DataVizScreen.kt
-│ │ │ ├── ECodesLibraryScreen.kt
-│ │ │ ├── FoodComparisonScreen.kt
-│ │ │ ├── FoodSectionScreen.kt
-│ │ │ ├── GraphingScreen.kt
-│ │ │ ├── ImageDetectorScreen.kt
-│ │ │ ├── ImageEditorScreen.kt
-│ │ │ ├── IngredientCheckerScreen.kt
-│ │ │ ├── LabelScannerScreen.kt
-│ │ │ ├── NutritionAnalysisScreen.kt
-│ │ │ └── QrScannerScreen.kt
-│ │ │
-│ │ ├── ui.theme/ # App theme, colors, typography
-│ │ │ ├── Color.kt
-│ │ │ ├── Theme.kt
-│ │ │ └── Type.kt
-│ │ │
-│ │ ├── utils/ # Utility classes & helpers
-│ │ │ ├── BitmapAdjustments.kt
-│ │ │ ├── BitmapFilters.kt
-│ │ │ └── ImageUtils.kt
-│ │ │
-│ │ ├── ViewModels/ # MVVM ViewModels
-│ │ │ └── OpenFoodFactsViewModel.kt
-│ │ │
-│ │ └── MainActivity.kt # App entry point
-│ │
-│ ├── assets/ # Static assets (if any)
-│ ├── res/ # Layouts, drawables, values
-│ └── res (generated)/ # Auto-generated resources
+│   ├── manifests/
+│   │   └── AndroidManifest.xml
+│   │
+│   ├── java/com/example/kotlin_firestore_data_viz/
+│   │   ├── controller/                # UI controls & interactions
+│   │   │   └── FilterControls.kt
+│   │   │
+│   │   ├── data/                      # Local storage & data handling
+│   │   │   └── LocalAdditives.kt
+│   │   │
+│   │   ├── navigation/                # Navigation components
+│   │   │   └── AppNavHost.kt
+│   │   │
+│   │   ├── network/                   # API and network services
+│   │   │   ├── FoodApiService.kt
+│   │   │   └── IngredientsTaxonomyService.kt
+│   │   │
+│   │   ├── screens/                   # UI screens
+│   │   │   ├── ColorAnalysisScreen.kt
+│   │   │   ├── DataVizScreen.kt
+│   │   │   ├── ECodesLibraryScreen.kt
+│   │   │   ├── FoodComparisonScreen.kt
+│   │   │   ├── FoodSectionScreen.kt
+│   │   │   ├── GraphingScreen.kt
+│   │   │   ├── ImageDetectorScreen.kt
+│   │   │   ├── ImageEditorScreen.kt
+│   │   │   ├── IngredientCheckerScreen.kt
+│   │   │   ├── LabelScannerScreen.kt
+│   │   │   ├── NutritionAnalysisScreen.kt
+│   │   │   └── QrScannerScreen.kt
+│   │   │
+│   │   ├── ui.theme/                  # App theme, colors, typography
+│   │   │   ├── Color.kt
+│   │   │   ├── Theme.kt
+│   │   │   └── Type.kt
+│   │   │
+│   │   ├── utils/                     # Utility classes & helpers
+│   │   │   ├── BitmapAdjustments.kt
+│   │   │   ├── BitmapFilters.kt
+│   │   │   └── ImageUtils.kt
+│   │   │
+│   │   ├── ViewModels/                # MVVM ViewModels
+│   │   │   └── OpenFoodFactsViewModel.kt
+│   │   │
+│   │   └── MainActivity.kt            # App entry point
+│   │
+│   ├── assets/                        # Static assets (if any)
+│   ├── res/                           # Layouts, drawables, values
+│   └── res (generated)/               # Auto-generated resources
 │
-├── build.gradle.kts # Project build config
+├── build.gradle.kts                   # Project build config
 ├── settings.gradle.kts
 ├── gradle.properties
 └── README.md
+```
 
 ---
 ## Architecture
